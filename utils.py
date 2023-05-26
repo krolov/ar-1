@@ -23,10 +23,24 @@ def sign_tx(web3, contract_txn, privatekey):
     return tx_hash
 
 
-def     check_data_token(web3, token_address):
+def check_data_token(web3, token_address):
 
     try:
 
+        token_contract  = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
+        decimals        = token_contract.functions.decimals().call()
+        symbol          = token_contract.functions.symbol().call()
+
+        return token_contract, decimals, symbol
+    
+    except Exception as error:
+        logger.error(error)
+
+def check_data_token_chain(chain, token_address):
+
+    try:
+
+        web3 = Web3(Web3.HTTPProvider(DATA[chain]['rpc']))
         token_contract  = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
         decimals        = token_contract.functions.decimals().call()
         symbol          = token_contract.functions.symbol().call()
@@ -560,7 +574,7 @@ def transfer(privatekey, retry=0):
             token_contract, decimals, symbol = check_data_token(web3, token_address)
 
         if transfer_all_balance:
-            amount = (check_balance(privatekey, chain, token_address) - keep_value) * 0.8
+            amount = (check_balance(privatekey, chain, token_address) - keep_value) * 0.97
         else:
             amount = round(random.uniform(amount_from, amount_to), 8)
 
@@ -632,5 +646,167 @@ def transfer(privatekey, retry=0):
             logger.info(f'try again | {wallet}')
             sleeping(10, 10)
             transfer(privatekey, retry + 1)
+        else:
+            list_send.append(f'{STR_CANCEL}{module_str}')
+
+def get_api_call_data(url):
+
+    def try_get_with_proxy():
+        try:
+            proxy = random.choice(PROXIES)
+            # cprint(proxy, 'yellow')
+            proxies = {
+                'http'  : proxy,
+                'https' : proxy,
+            }
+            call_data = requests.get(url, proxies=proxies)
+            return call_data
+        except Exception as error:
+            logger.error(error)
+            call_data = requests.get(url)
+
+    call_data = requests.get(url)
+
+    # cprint(f'call_data.status_code : {call_data.status_code}', 'blue')
+
+    if call_data.status_code == 200:
+        api_data = call_data.json()
+        return api_data
+    
+    raise Exception(f'call_data.status_code : {call_data.status_code}')
+    # throw error
+    
+
+
+    # else:
+
+    #     logger.info(call_data.content)
+
+    #     call_data = try_get_with_proxy()
+
+    #     if call_data.status_code == 200:
+    #         api_data = call_data.json()
+    #         return api_data
+        
+    #     else:
+
+    #         try:
+    #             api_data = call_data.json()
+    #             logger.error(api_data['description'])
+    #             return False
+            
+    #         except ValueError as error:
+    #             logger.error(error)
+    #             time.sleep(1)
+    #             return get_api_call_data(url)
+            
+    #         except Exception as error:
+    #             logger.error(error)
+    #             return get_api_call_data(url)
+
+
+def inch_swap(privatekey, retry=0, first = False, last = False):
+        
+    try:
+
+        logger.info('1inch_swap')
+
+        inch_version = 5
+
+        rows = value_1inch_swap(first, last, privatekey)
+        for row in rows:
+            [chain, amount_from, amount_to, from_token_address, to_token_address, slippage, from_symbol, to_symbol] = row
+
+            divider = 1
+
+            web3 = Web3(Web3.HTTPProvider(DATA[chain]['rpc']))
+            chain_id = web3.eth.chain_id
+
+            if from_token_address == '': 
+                from_token_address = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+                from_decimals = 18
+                from_symbol = DATA[chain]['token']
+            else:
+                from_token_contract, from_decimals, from_symbol = check_data_token_chain(chain, from_token_address)
+
+            if to_token_address   == '': 
+                to_token_address   = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+                to_symbol = DATA[chain]['token']
+
+            else:
+                to_token_contract, to_decimals, to_symbol = check_data_token_chain(chain, to_token_address)
+
+            account = web3.eth.account.from_key(privatekey)
+            wallet  = account.address
+
+            amount = round(random.uniform(amount_from, amount_to), 8)
+            amount = amount*0.999
+            amount_to_swap = intToDecimal(amount, from_decimals) 
+
+            logger.info(f'{chain} : {amount} {from_symbol} => {to_symbol}')
+
+            spender_json    = get_api_call_data(f'https://api.1inch.io/v{inch_version}.0/{chain_id}/approve/spender')
+            spender         = Web3.to_checksum_address(spender_json['address'])
+
+            # если токен не нативный, тогда проверяем апрув и если он меньше нужного, делаем апруваем
+            if from_token_address != '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE':
+                approve_(amount_to_swap, privatekey, chain, from_token_address, spender)
+
+            _1inchurl = f'https://api.1inch.io/v{inch_version}.0/{chain_id}/swap?fromTokenAddress={from_token_address}&toTokenAddress={to_token_address}&amount={amount_to_swap}&fromAddress={wallet}&slippage={slippage}'
+            json_data = get_api_call_data(_1inchurl)
+
+            if json_data == False: 
+                
+                logger.info('failed to swap in 1inch')
+
+            else:
+
+                # cprint(json_data, 'yellow')
+
+                tx  = json_data['tx']
+
+                tx['chainId']   = chain_id
+                tx['nonce']     = web3.eth.get_transaction_count(wallet)
+                tx['to']        = Web3.to_checksum_address(tx['to'])
+                tx['gasPrice']  = int(tx['gasPrice'])
+                tx['gas']       = int(int(tx['gas']) / divider)
+                tx['value']     = int(tx['value'])
+
+                # cprint(tx, 'blue')
+
+                if chain == 'bsc':
+                    tx['gasPrice'] = random.randint(1000000000, 1050000000) # специально ставим 1 гвей, так транза будет дешевле
+
+
+                        
+                tx_hash     = sign_tx(web3, tx, privatekey)
+                tx_link     = f'{DATA[chain]["scan"]}/{tx_hash}'
+
+                module_str = f'1inch_swap : {round_to(amount)} {from_symbol} => {to_symbol}'
+
+                status  = check_status_tx(chain, tx_hash)
+
+                if status == 1:
+                    logger.success(f'{module_str} | {tx_link}')
+                    list_send.append(f'{STR_DONE}{module_str}')
+                else:
+                    logger.error(f'{module_str} | tx is failed | {tx_link}')
+                    if retry < RETRY:
+                        logger.info(f'try again in 10 sec.')
+                        sleeping(10, 10)
+                        inch_swap(privatekey, retry+1)
+
+    except KeyError:
+        logger.error(json_data['description'])
+        module_str = f'1inch_swap'
+        list_send.append(f'{STR_CANCEL}{module_str}')
+
+    except Exception as error:
+        module_str = f'1inch_swap'
+        logger.error(f'{module_str} | error : {error}')
+        if retry < RETRY:
+            logger.info(f'try again in 10 sec.')
+            sleeping(10, 10)
+            inch_swap(privatekey, retry+1)
         else:
             list_send.append(f'{STR_CANCEL}{module_str}')
