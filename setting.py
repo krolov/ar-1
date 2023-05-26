@@ -65,13 +65,10 @@ def value_woofi(privatekey, is_last=False):
 
     # �������� from ����: [�������� ������, �������� ������, ...]
     from_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', '0xc2132d05d31c914a87c6611c10748aeb04b58e8f'],
-                   'fantom': ['0x04068DA6C83AFCFA0e13ba15A6696662335D5B75', '0x049d68029688eAbF473097a2fC38ef61633A3C7A'],
-                   'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7'],
-                   'bsc': ['0x55d398326f99059ff775485246999027b3197955']}
+                   'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7']}
 
-    # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ to пїЅпїЅпїЅпїЅ: [пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, ...]
+    # �������� to ����: [�������� ������, �������� ������, ...]
     to_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', '0xc2132d05d31c914a87c6611c10748aeb04b58e8f'],
-                 'bsc': ['0x55d398326f99059ff775485246999027b3197955'],
                  'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7']}
 
     chain_with_balance = ''

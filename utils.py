@@ -2,6 +2,66 @@ from config import *
 
 list_send = []
 
+networks2 = {
+    "ethereum": {
+        "USDC": 1,
+        "USDt": 2,
+        "USDT": 2,
+        "DAI": 3,
+        "FRAX": 7,
+        "USDD": 11,
+        "ETH": 13,
+        "sUSD": 14,
+        "LUSD": 15,
+        "MAI": 16,
+        "METIS": 17,
+        "metis.USDT": 19
+    },
+    "bsc": {
+        "USDt": 2,
+        "USDT": 2,
+        "BUSD": 5,
+        "USDD": 11,
+        "MAI": 16,
+        "METIS": 17,
+        "metis.USDT": 19
+    },
+    "avalanche": {
+        "USDC": 1,
+        "USDt": 2,
+        "USDT": 2,
+        "FRAX": 7,
+        "MAI": 16,
+        "metis.USDT": 19
+    },
+    "polygon": {
+        "USDC": 1,
+        "USDt": 2,
+        "USDT": 2,
+        "DAI": 3,
+        "MAI": 16
+ },
+    "arbitrum": {
+        "USDC": 1,
+        "USDt": 2,
+        "USDT": 2,
+        "FRAX": 7,
+        "ETH": 13,
+        "LUSD": 15,
+        "MAI": 16
+    },
+    "optimism": {
+        "USDt": 1,
+        "USDT": 1,
+        "DAI": 3,
+        "FRAX": 7,
+        "ETH": 13,
+        "sUSD": 14,
+        "LUSD": 15,
+        "MAI": 16
+    },
+}
+
 
 # ============ web3_helpers ============
 def evm_wallet(key):
@@ -23,24 +83,10 @@ def sign_tx(web3, contract_txn, privatekey):
     return tx_hash
 
 
-def check_data_token(web3, token_address):
+def     check_data_token(web3, token_address):
 
     try:
 
-        token_contract  = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
-        decimals        = token_contract.functions.decimals().call()
-        symbol          = token_contract.functions.symbol().call()
-
-        return token_contract, decimals, symbol
-    
-    except Exception as error:
-        logger.error(error)
-
-def check_data_token_chain(chain, token_address):
-
-    try:
-
-        web3 = Web3(Web3.HTTPProvider(DATA[chain]['rpc']))
         token_contract  = web3.eth.contract(address=Web3.to_checksum_address(token_address), abi=ERC20_ABI)
         decimals        = token_contract.functions.decimals().call()
         symbol          = token_contract.functions.symbol().call()
@@ -74,7 +120,7 @@ def add_gas_limit(web3, contract_txn):
     try:
         value = contract_txn['value']
         contract_txn['value'] = 0
-        pluser = [1.02, 1.05]
+        pluser = [1.3, 1.7]
         gasLimit = web3.eth.estimate_gas(contract_txn)
         contract_txn['gas'] = int(gasLimit * random.uniform(pluser[0], pluser[1]))
         # logger.info(f"gasLimit : {contract_txn['gas']}")
@@ -89,7 +135,7 @@ def add_gas_limit(web3, contract_txn):
 def add_gas_limit_layerzero(web3, contract_txn):
 
     try:
-        pluser = [1.05, 1.07]
+        pluser = [1.3, 1.7]
         gasLimit = web3.eth.estimate_gas(contract_txn)
         contract_txn['gas'] = int(gasLimit * random.uniform(pluser[0], pluser[1]))
         # logger.info(f"gasLimit : {contract_txn['gas']}")
@@ -226,7 +272,7 @@ def woofi_get_min_amount(chain, from_token, to_token, amount):
 
             # cprint(f'{chain} : {from_token} => {to_token} | {amount}', 'blue')
 
-            slippage = 0.98
+            slippage = 5
 
             web3 = Web3(Web3.HTTPProvider(DATA[chain]['rpc']))
             address_contract = web3.to_checksum_address(WOOFI_SWAP_CONTRACTS[chain])
@@ -235,13 +281,9 @@ def woofi_get_min_amount(chain, from_token, to_token, amount):
             from_token  = Web3.to_checksum_address(from_token)
             to_token    = Web3.to_checksum_address(to_token)
 
-            minToAmount = contract.functions.tryQuerySwap(
-                from_token,
-                to_token,
-                amount
-                ).call()
+            minToAmount = int(amount - (amount * (slippage / 1000)))
 
-            return int(minToAmount * slippage)
+            return minToAmount
         
         else:
 
@@ -322,6 +364,8 @@ def woofi_bridge(privatekey, from_chain, to_chain, from_token, to_token, swap_al
             amount_ = round(random.uniform(amount_from, amount_to), 8)
 
         web3 = Web3(Web3.HTTPProvider(DATA[from_chain]['rpc']))
+        web3_tar = Web3(Web3.HTTPProvider(DATA[to_chain]['rpc']))
+
         address_contract = web3.to_checksum_address(
             WOOFI_BRIDGE_CONTRACTS[from_chain]
         )
@@ -355,13 +399,21 @@ def woofi_bridge(privatekey, from_chain, to_chain, from_token, to_token, swap_al
             approve_(amount, privatekey, from_chain, from_token, WOOFI_BRIDGE_CONTRACTS[from_chain])
             sleeping(5, 10)
 
+
+        # TODO MODED CODE START
         while True:
             try:
                 fees = contract.functions.quoteLayerZeroFee(
-                    random.randint(112101680502565000, 712101680502565000),     # refId
-                    wallet,     # to
-                    srcInfos,
-                    dstInfos
+                    dstInfos[0],  # dst chain
+                    1,  # function type (1 - swap, 2 - add Liquidity, 3 - REDEEM LOCAL CALL BACK, 4 - WITHDRAW REMOTE)
+                    dstInfos[1],  # to address
+                    "0x",  # payload, using abi.encode()
+
+                    # lz Tx Params
+                    [0,  # extra gas, if calling smart contract
+                     0,  # amount of dust dropped in destination wallet
+                     "0x0000000000000000000000000000000000000001"  # destination wallet for dust
+                     ]
                     ).call()
                 break
             except Exception as error:
@@ -373,12 +425,38 @@ def woofi_bridge(privatekey, from_chain, to_chain, from_token, to_token, swap_al
         else:
             value = int(fees[0])
 
+
+        token_contract2, decimals2, symbol2 = check_data_token(web3, from_token)
+        token_contract3, decimals3, symbol3 = check_data_token(web3_tar, to_token)
+
+        src_pool = 1
+        tar_pool = 1
+
+        if from_chain in networks2.keys():
+            src_pool = networks2[from_chain][symbol2] if symbol2 in networks2[from_chain].keys() else None
+
+
+        if to_chain in networks2.keys():
+            tar_pool = networks2[to_chain][symbol3] if symbol3 in networks2[to_chain].keys() else None
+
+        amount_ = int(amount_)
+        min_amount_swap = int(min_amount_swap)
+
         if amount_ >= min_amount_swap:
-            contract_txn = contract.functions.crossSwap(
-                random.randint(112101680502565000, 712101680502565000),     # refId
+            contract_txn = contract.functions.swap(
+                dstInfos[0],
+                src_pool,
+                tar_pool,# refId
                 wallet,     # to
-                srcInfos,
-                dstInfos
+                amount_,
+                min_amount_swap,
+                [
+                    0,  # dst Gas For Call
+                    0,  # dst Native Amount
+                    wallet  # dst Native Addr
+                ],
+                wallet,
+                '0x'
                 ).build_transaction(
                 {
                     'from': wallet,
@@ -388,6 +466,8 @@ def woofi_bridge(privatekey, from_chain, to_chain, from_token, to_token, swap_al
                     'gas': 0,
                 }
             )
+
+            # TODO MODED CODE END
 
             contract_txn = add_gas_price(web3, contract_txn)
             contract_txn = add_gas_limit_layerzero(web3, contract_txn)
@@ -481,16 +561,41 @@ def woofi_swap(privatekey, from_chain, from_token, to_token, swap_all_balance, a
         else:
             value = 0
 
+
+
+
+
+        # TODO MODED CODE START
+        token_contract2, decimals2, symbol2 = check_data_token(web3, from_token)
+        token_contract3, decimals3, symbol3 = check_data_token(web3, to_token)
+
+        src_pool = 1
+        tar_pool = 1
+
+        if from_chain in networks2.keys():
+            src_pool = networks2[from_chain][symbol2] if symbol2 in networks2[from_chain].keys() else None
+            tar_pool = networks2[from_chain][symbol3] if symbol3 in networks2[from_chain].keys() else None
+
+        else:
+            print("Chain not available")
+
         minToAmount = woofi_get_min_amount(from_chain, from_token, to_token, amount)
 
         if amount_ >= min_amount_swap:
             contract_txn = contract.functions.swap(
-                from_token, 
-                to_token, 
-                amount, 
-                minToAmount, 
+                LAYERZERO_CHAINS_ID[from_chain],
+                src_pool,
+                tar_pool,
                 wallet,
-                wallet
+                amount, 
+                minToAmount,
+                [
+                    0,  # dst Gas For Call
+                    0,  # dst Native Amount
+                    wallet  # dst Native Addr
+                ],
+                wallet,
+                '0x'
                 ).build_transaction(
                 {
                     'from': wallet,
@@ -500,6 +605,8 @@ def woofi_swap(privatekey, from_chain, from_token, to_token, swap_all_balance, a
                     'gas': 0,
                 }
             )
+        # TODO MODED CODE END
+
 
             contract_txn = add_gas_price(web3, contract_txn)
             contract_txn = add_gas_limit(web3, contract_txn)
@@ -646,167 +753,5 @@ def transfer(privatekey, retry=0):
             logger.info(f'try again | {wallet}')
             sleeping(10, 10)
             transfer(privatekey, retry + 1)
-        else:
-            list_send.append(f'{STR_CANCEL}{module_str}')
-
-def get_api_call_data(url):
-
-    def try_get_with_proxy():
-        try:
-            proxy = random.choice(PROXIES)
-            # cprint(proxy, 'yellow')
-            proxies = {
-                'http'  : proxy,
-                'https' : proxy,
-            }
-            call_data = requests.get(url, proxies=proxies)
-            return call_data
-        except Exception as error:
-            logger.error(error)
-            call_data = requests.get(url)
-
-    call_data = requests.get(url)
-
-    # cprint(f'call_data.status_code : {call_data.status_code}', 'blue')
-
-    if call_data.status_code == 200:
-        api_data = call_data.json()
-        return api_data
-    
-    raise Exception(f'call_data.status_code : {call_data.status_code}')
-    # throw error
-    
-
-
-    # else:
-
-    #     logger.info(call_data.content)
-
-    #     call_data = try_get_with_proxy()
-
-    #     if call_data.status_code == 200:
-    #         api_data = call_data.json()
-    #         return api_data
-        
-    #     else:
-
-    #         try:
-    #             api_data = call_data.json()
-    #             logger.error(api_data['description'])
-    #             return False
-            
-    #         except ValueError as error:
-    #             logger.error(error)
-    #             time.sleep(1)
-    #             return get_api_call_data(url)
-            
-    #         except Exception as error:
-    #             logger.error(error)
-    #             return get_api_call_data(url)
-
-
-def inch_swap(privatekey, retry=0, first = False, last = False):
-        
-    try:
-
-        logger.info('1inch_swap')
-
-        inch_version = 5
-
-        rows = value_1inch_swap(first, last, privatekey)
-        for row in rows:
-            [chain, amount_from, amount_to, from_token_address, to_token_address, slippage, from_symbol, to_symbol] = row
-
-            divider = 1
-
-            web3 = Web3(Web3.HTTPProvider(DATA[chain]['rpc']))
-            chain_id = web3.eth.chain_id
-
-            if from_token_address == '': 
-                from_token_address = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-                from_decimals = 18
-                from_symbol = DATA[chain]['token']
-            else:
-                from_token_contract, from_decimals, from_symbol = check_data_token_chain(chain, from_token_address)
-
-            if to_token_address   == '': 
-                to_token_address   = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-                to_symbol = DATA[chain]['token']
-
-            else:
-                to_token_contract, to_decimals, to_symbol = check_data_token_chain(chain, to_token_address)
-
-            account = web3.eth.account.from_key(privatekey)
-            wallet  = account.address
-
-            amount = round(random.uniform(amount_from, amount_to), 8)
-            amount = amount*0.999
-            amount_to_swap = intToDecimal(amount, from_decimals) 
-
-            logger.info(f'{chain} : {amount} {from_symbol} => {to_symbol}')
-
-            spender_json    = get_api_call_data(f'https://api.1inch.io/v{inch_version}.0/{chain_id}/approve/spender')
-            spender         = Web3.to_checksum_address(spender_json['address'])
-
-            # если токен не нативный, тогда проверяем апрув и если он меньше нужного, делаем апруваем
-            if from_token_address != '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE':
-                approve_(amount_to_swap, privatekey, chain, from_token_address, spender)
-
-            _1inchurl = f'https://api.1inch.io/v{inch_version}.0/{chain_id}/swap?fromTokenAddress={from_token_address}&toTokenAddress={to_token_address}&amount={amount_to_swap}&fromAddress={wallet}&slippage={slippage}'
-            json_data = get_api_call_data(_1inchurl)
-
-            if json_data == False: 
-                
-                logger.info('failed to swap in 1inch')
-
-            else:
-
-                # cprint(json_data, 'yellow')
-
-                tx  = json_data['tx']
-
-                tx['chainId']   = chain_id
-                tx['nonce']     = web3.eth.get_transaction_count(wallet)
-                tx['to']        = Web3.to_checksum_address(tx['to'])
-                tx['gasPrice']  = int(tx['gasPrice'])
-                tx['gas']       = int(int(tx['gas']) / divider)
-                tx['value']     = int(tx['value'])
-
-                # cprint(tx, 'blue')
-
-                if chain == 'bsc':
-                    tx['gasPrice'] = random.randint(1000000000, 1050000000) # специально ставим 1 гвей, так транза будет дешевле
-
-
-                        
-                tx_hash     = sign_tx(web3, tx, privatekey)
-                tx_link     = f'{DATA[chain]["scan"]}/{tx_hash}'
-
-                module_str = f'1inch_swap : {round_to(amount)} {from_symbol} => {to_symbol}'
-
-                status  = check_status_tx(chain, tx_hash)
-
-                if status == 1:
-                    logger.success(f'{module_str} | {tx_link}')
-                    list_send.append(f'{STR_DONE}{module_str}')
-                else:
-                    logger.error(f'{module_str} | tx is failed | {tx_link}')
-                    if retry < RETRY:
-                        logger.info(f'try again in 10 sec.')
-                        sleeping(10, 10)
-                        inch_swap(privatekey, retry+1)
-
-    except KeyError:
-        logger.error(json_data['description'])
-        module_str = f'1inch_swap'
-        list_send.append(f'{STR_CANCEL}{module_str}')
-
-    except Exception as error:
-        module_str = f'1inch_swap'
-        logger.error(f'{module_str} | error : {error}')
-        if retry < RETRY:
-            logger.info(f'try again in 10 sec.')
-            sleeping(10, 10)
-            inch_swap(privatekey, retry+1)
         else:
             list_send.append(f'{STR_CANCEL}{module_str}')
