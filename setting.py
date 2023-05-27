@@ -180,6 +180,7 @@ def value_1inch_swap(first, last, private_key):
             'native_coin': 'ftm',
             'native_contract': '',
             'gas_balance': 5,
+            'min_swap': 1, #минимальный свап
             'max_swap': 3,
             'coins': {
                 'link': '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
@@ -198,6 +199,7 @@ def value_1inch_swap(first, last, private_key):
             'native_coin': 'matic', #нативная монета
             'native_contract': '', #контракт нативной монеты
             'gas_balance': 5, #минимальный остаток для газа
+            'min_swap': 0.5, #минимальный свап
             'max_swap': 1, #максимальный свап
             'coins': { 
                 'link': '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39',
@@ -308,8 +310,8 @@ def value_1inch_swap(first, last, private_key):
     if balance > increased_gas_balance:
         from_symbol = data_swap[chain]['native_coin']
         from_token_address = data_swap[chain]['native_contract']
-        amount_from = balance - data_swap[chain]['gas_balance']
-        amount_from = random.uniform(data_swap[chain]['gas_balance'], min(amount_from, data_swap[chain]['max_swap']))
+        available = balance - data_swap[chain]['gas_balance']
+        amount_from = random.uniform(min(data_swap[chain]['min_swap'], available), min(available, data_swap[chain]['max_swap']))
         amount_to = amount_from
         to_symbol = random.choice(list(data_swap[chain]['coins'].keys()))
         to_token_address = data_swap[chain]['coins'][to_symbol]
