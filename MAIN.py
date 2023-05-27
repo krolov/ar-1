@@ -30,10 +30,10 @@ if __name__ == "__main__":
                 with open('results/finished_wallets.txt', 'a', encoding='utf-8') as f:
                     f.write(f'{key}\n')
 
-            flip = random.randrange(2)#рандом 50%
+            flip = random.randrange(3)#рандом 50%
             logger.info(f'flip: {flip}')
             if flip:
-                delay = random.randint(60, 120) # время делея
+                delay = random.randint(600, 1200) # время делея
                 Timer(delay, inch_swap, kwargs={'privatekey': key, 'retry': 0}).start() # свап
                 
             if IS_SLEEP:

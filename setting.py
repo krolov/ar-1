@@ -11,8 +11,8 @@ MODULE = 8
 
 IS_SLEEP = True  # True / False. True ���� ����� ��������� sleep ����� ����������
 # �� ������� �� ������� ���� ����� ���������� (�������) :
-SLEEP_FROM = 80
-SLEEP_TO = 120
+SLEEP_FROM = 60
+SLEEP_TO = 80
 
 TRANSFER = False     # ������ �������� � ����� True = ��, False = ���
 TRANSFER_DELAY = 60     # �������� ����� ��������� ������� � ���������� � ��������
@@ -68,8 +68,8 @@ def value_woofi(privatekey, is_last=False):
                    'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7']}
 
     # �������� to ����: [�������� ������, �������� ������, ...]
-    to_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', '0xc2132d05d31c914a87c6611c10748aeb04b58e8f'],
-                 'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7']}
+    to_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'],
+                 'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E']}
 
     chain_with_balance = ''
     balance = 0
@@ -118,9 +118,9 @@ def value_woofi(privatekey, is_last=False):
     amount_to = 30                   # �� ������ ���-�� from_token �������
 
     swap_all_balance = True        # True / False. ���� True, ����� ������� ���� ������
-    min_amount_swap = 0             # ���� ������ ����� ������ ����� �����, ������� �� �����
-    keep_value_from = 0         # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
-    keep_value_to = 0           # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
+    min_amount_swap = 10             # ���� ������ ����� ������ ����� �����, ������� �� �����
+    keep_value_from = 0.001         # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
+    keep_value_to = 0.002           # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
 
     return from_chain, to_chain, from_token, to_token, swap_all_balance, amount_from, \
         amount_to, min_amount_swap, keep_value_from, keep_value_to
@@ -174,25 +174,25 @@ def value_1inch_swap(first, last, private_key):
         #     'native': '',
         #     'coins': {}
         # },
-        'fantom': {
-            'usdt' : '0x1B27A9dE6a775F98aaA5B90B62a4e2A0B84DbDd9',
-            'usdc': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-            'native_coin': 'ftm',
-            'native_contract': '',
-            'gas_balance': 5,
-            'min_swap': 1, #минимальный свап
-            'max_swap': 3,
-            'coins': {
-                'link': '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
-                'frax': '0xdc301622e621166BD8E82f2cA0A26c13Ad0BE355',
-                'woo': '0x6626c47c00F1D87902fc13EECfaC3ed06D5E8D8a',
+        #'fantom': {
+            #'usdt' : '0x1B27A9dE6a775F98aaA5B90B62a4e2A0B84DbDd9',
+            #'usdc': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
+            #'native_coin': 'ftm',
+            #'native_contract': '',
+            #'gas_balance': 5,
+            #'min_swap': 1, #минимальный свап
+            #'max_swap': 3,
+            #'coins': {
+                #'link': '0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8',
+                #'frax': '0xdc301622e621166BD8E82f2cA0A26c13Ad0BE355',
+                #'woo': '0x6626c47c00F1D87902fc13EECfaC3ed06D5E8D8a',
                 #'cel': '0x2c78f1b70ccf63cdee49f9233e9faa99d43aa07e',
-                'sushi': '0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC',
+                #'sushi': '0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC',
                 #'stg': '0x2f6f07cdcf3588944bf4c42ac74ff24bf56e7590',
-                'aave': '0x6a07A792ab2965C72a5B8088d3a069A7aC3a993B',
+                #'aave': '0x6a07A792ab2965C72a5B8088d3a069A7aC3a993B',
                 #'bifi': '0xd6070ae98b8069de6b494332d1a1a81b6179d960',
-            },
-        },
+            #},
+        #},
         'polygon': {
             'usdt': '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', #контракт usdt
             'usdc': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', #контракт usdc

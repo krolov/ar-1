@@ -149,7 +149,7 @@ def add_gas_limit(web3, contract_txn):
 def add_gas_limit_layerzero(web3, contract_txn):
 
     try:
-        pluser = [1.3, 1.7]
+        pluser = [1.05, 1.07]
         gasLimit = web3.eth.estimate_gas(contract_txn)
         contract_txn['gas'] = int(gasLimit * random.uniform(pluser[0], pluser[1]))
         # logger.info(f"gasLimit : {contract_txn['gas']}")
@@ -164,7 +164,7 @@ def add_gas_price(web3, contract_txn):
 
     try:
         gas_price = web3.eth.gas_price
-        contract_txn['gasPrice'] = int(gas_price * random.uniform(1.2, 1.3))
+        contract_txn['gasPrice'] = int(gas_price * random.uniform(1.01, 1.02))
     except Exception as error: 
         logger.error(error)
 
@@ -453,8 +453,8 @@ def woofi_bridge(privatekey, from_chain, to_chain, from_token, to_token, swap_al
         if to_chain in networks2.keys():
             tar_pool = networks2[to_chain][symbol3] if symbol3 in networks2[to_chain].keys() else None
 
-        amount_ = int(amount_)
-        min_amount_swap = int(min_amount_swap)
+        amount_ = amount
+        min_amount_swap = dstInfos[3]
 
         if amount_ >= min_amount_swap:
             contract_txn = contract.functions.swap(
