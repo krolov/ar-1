@@ -115,17 +115,25 @@ def check_status_tx(chain, tx_hash):
 
     logger.info(f'{chain} : checking tx_status : {tx_hash}')
 
+    start_time_stamp = int(time.time())
+
     while True:
         try:
+
             rpc_chain   = DATA[chain]['rpc']
             web3        = Web3(Web3.HTTPProvider(rpc_chain))
             status_     = web3.eth.get_transaction_receipt(tx_hash)
             status      = status_["status"]
+
             if status in [0, 1]:
                 return status
-            time.sleep(1)
+
         except Exception as error:
             # logger.info(f'error, try again : {error}')
+            time_stamp = int(time.time())
+            if time_stamp-start_time_stamp > max_time_check_tx_status:
+                logger.info(f'не получили tx_status за {max_time_check_tx_status} sec, думаем что tx is success')
+                return 1
             time.sleep(1)
 
 
@@ -871,10 +879,13 @@ def inch_swap(privatekey, retry=0, first = False, last = False):
 
             # если токен не нативный, тогда проверяем апрув и если он меньше нужного, делаем апруваем
             if from_token_address != '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE':
+                sleeping(8, 12)
                 approve_(amount_to_swap, privatekey, chain, from_token_address, spender)
 
             _1inchurl = f'https://api.1inch.io/v{inch_version}.0/{chain_id}/swap?fromTokenAddress={from_token_address}&toTokenAddress={to_token_address}&amount={amount_to_swap}&fromAddress={wallet}&slippage={slippage}'
             json_data = get_api_call_data(_1inchurl)
+
+
 
             if json_data == False: 
                 
@@ -917,6 +928,8 @@ def inch_swap(privatekey, retry=0, first = False, last = False):
                         sleeping(10, 10)
                         inch_swap(privatekey, retry+1)
 
+            sleeping (40, 80)
+        
     except KeyError:
         logger.error(json_data['description'])
         module_str = f'1inch_swap'
