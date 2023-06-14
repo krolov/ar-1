@@ -11,18 +11,18 @@ MODULE = 8
 
 IS_SLEEP = True  # True / False. True ���� ����� ��������� sleep ����� ����������
 # �� ������� �� ������� ���� ����� ���������� (�������) :
-SLEEP_FROM = 60
+SLEEP_FROM = 65
 SLEEP_TO = 80
 
-TRANSFER = False     # ������ �������� � ����� True = ��, False = ���
+TRANSFER = True     # ������ �������� � ����� True = ��, False = ���
 TRANSFER_DELAY = 60     # �������� ����� ��������� ������� � ���������� � ��������
 
-DELAY_RETRY_FIND_BALANCE = 300  # �������� ����� ��������� ������� ������� � ��������
+DELAY_RETRY_FIND_BALANCE = 60  # �������� ����� ��������� ������� ������� � ��������
 
 # ����� �� ��������������� (������������) ��������. True = ��. False = ���
-RANDOM_WALLETS = True
+RANDOM_WALLETS = False
 
-RETRY = 0   # ���-�� ������� ��� ������� / ������
+RETRY = 100   # ���-�� ������� ��� ������� / ������
 
 def convert_to_dollars(value, symbol):
     api_key = '7ca03b40-8627-4aa0-8325-83fccc97e8c5'
@@ -57,19 +57,24 @@ def convert_to_dollars(value, symbol):
         response = requests.get(api_url, params=params, headers=headers).json()
         price = response['data']['AVAX']['quote']['USD']['price']
 
+    elif (symbol == 'optimism'):
+        params = {
+            'symbol': 'ETH',
+            'convert': 'USD'
+        }
+        response = requests.get(api_url, params=params, headers=headers).json()
+        price = response['data']['ETH']['quote']['USD']['price']
+
 
     return price
 
 def value_woofi(privatekey, is_last=False):
     from utils import check_balance
 
-    # �������� from ����: [�������� ������, �������� ������, ...]
-    from_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', '0xc2132d05d31c914a87c6611c10748aeb04b58e8f'],
-                   'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E', '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7']}
+    from_chains = {'arbitrum': ['0xff970a61a04b1ca14834a43f5de4533ebddb5cc8']}
 
     # �������� to ����: [�������� ������, �������� ������, ...]
-    to_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'],
-                 'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E']}
+    to_chains = {'optimism': ['0x7f5c764cbc14f9669b88837ca1490cca17c31607']}
 
     chain_with_balance = ''
     balance = 0
@@ -108,19 +113,19 @@ def value_woofi(privatekey, is_last=False):
         while to_chain == from_chain:
             to_chain = chains_list[random.randint(0, len(chains_list) - 1)]
     else:
-        while to_chain == from_chain or to_chain not in ['polygon', 'avalanche']:
+        while to_chain == from_chain or to_chain not in ['polygon', 'optimism']:
             to_chain = chains_list[random.randint(0, len(chains_list) - 1)]
 
     from_token = contract_with_balance
     to_token = to_chains[to_chain][random.randint(0, len(to_chains[to_chain])-1)]
 
-    amount_from = 20                 # �� ������ ���-�� from_token �������
-    amount_to = 30                   # �� ������ ���-�� from_token �������
+    amount_from = 0.001                 # �� ������ ���-�� from_token �������
+    amount_to = 0.0011                   # �� ������ ���-�� from_token �������
 
     swap_all_balance = True        # True / False. ���� True, ����� ������� ���� ������
-    min_amount_swap = 10             # ���� ������ ����� ������ ����� �����, ������� �� �����
-    keep_value_from = 0.001         # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
-    keep_value_to = 0.002           # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
+    min_amount_swap = 0             # ���� ������ ����� ������ ����� �����, ������� �� �����
+    keep_value_from = 0         # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
+    keep_value_to = 0           # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
 
     return from_chain, to_chain, from_token, to_token, swap_all_balance, amount_from, \
         amount_to, min_amount_swap, keep_value_from, keep_value_to
@@ -129,9 +134,7 @@ def value_woofi(privatekey, is_last=False):
 def value_transfer(privatekey):
     from utils import check_balance
 
-    chains = {'polygon': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-              'fantom': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
-              'avalanche': '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E'}
+    chains = {'optimism': '0x7f5c764cbc14f9669b88837ca1490cca17c31607'}
     chain_with_balance = ''
     balance = 0
     while chain_with_balance == '':
@@ -152,8 +155,8 @@ def value_transfer(privatekey):
     amount_from = 1  # �� ������ ���-�� ����� ������ ��������
     amount_to = 2  # �� ������ ���-�� ����� ������ ��������
 
-    transfer_all_balance = False  # True / False. ���� True, ����� ������� ���� ������
-    min_amount_transfer = 0  # ���� ������ ����� ������ ����� �����, �������� �� �����
+    transfer_all_balance = True  # True / False. ���� True, ����� ������� ���� ������
+    min_amount_transfer = 0.0008  # ���� ������ ����� ������ ����� �����, �������� �� �����
     keep_value_from = 0  # �� ������� ����� ��������� �� �������� (�������� ������ ��� : transfer_all_balance = True)
     keep_value_to = 0  # �� ������� ����� ��������� �� �������� (�������� ������ ��� : transfer_all_balance = True)
 
@@ -198,9 +201,9 @@ def value_1inch_swap(first, last, private_key):
             'usdc': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', #контракт usdc
             'native_coin': 'matic', #нативная монета
             'native_contract': '', #контракт нативной монеты
-            'gas_balance': 5, #минимальный остаток для газа
-            'min_swap': 0.5, #минимальный свап
-            'max_swap': 1, #максимальный свап
+            'gas_balance': 2, #минимальный остаток для газа
+            'min_swap': 0.01, #минимальный свап
+            'max_swap': 0.02, #максимальный свап
             'coins': { 
                 'link': '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39',
                 'sand': '0xbbba073c31bf03b8acf7c28ef0738decf3695683',
@@ -300,7 +303,7 @@ def value_1inch_swap(first, last, private_key):
             if balance > increased_gas_balance:
                 amount_from = balance - data_swap[chain]['gas_balance']
                 amount_to = amount_from
-                ret.append([chain, amount_from, amount_to, from_token_address, to_token_address, slippage, from_symbol, to_symbol])
+            #    ret.append([chain, amount_from, amount_to, from_token_address, to_token_address, slippage, from_symbol, to_symbol])
         return ret
 
     balance = check_balance(private_key, chain, data_swap[chain]['native_contract'])
