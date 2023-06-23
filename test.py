@@ -1,13 +1,3 @@
-from config import sleeping
 from utils import inch_swap
-import time
 
-
-inch_swap("0x65472ee4259ade0b4d87e4fb71a42a062bf8589ff0f85783e221d6de5622fcaa", 0 , False, False)
-inch_swap("0x65472ee4259ade0b4d87e4fb71a42a062bf8589ff0f85783e221d6de5622fcaa", 0 , False, False)
-inch_swap("0x65472ee4259ade0b4d87e4fb71a42a062bf8589ff0f85783e221d6de5622fcaa", 0 , False, False)
-inch_swap("0x65472ee4259ade0b4d87e4fb71a42a062bf8589ff0f85783e221d6de5622fcaa", 0 , False, False)
-inch_swap("0x65472ee4259ade0b4d87e4fb71a42a062bf8589ff0f85783e221d6de5622fcaa", 0 , False, True)
-
-
-sleeping(10, 50)
+inch_swap("0x64ea8e6d091a054dffa640ee996313d8dfe3928bea8e520b055a188203908c80", 0 , False, True)

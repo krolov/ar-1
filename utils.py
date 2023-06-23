@@ -50,8 +50,9 @@ networks2 = {
         "LUSD": 15,
         "MAI": 16
     },
-     "optimism": {
-        "USDC": 1,
+    "optimism": {
+        "USDt": 1,
+        "USDT": 1,
         "DAI": 3,
         "FRAX": 7,
         "ETH": 13,
@@ -672,6 +673,8 @@ def woofi_swap(privatekey, from_chain, from_token, to_token, swap_all_balance, a
 
 def woofi(privatekey, is_last=False):
     from_chain, to_chain, from_token, to_token, swap_all_balance, amount_from, amount_to, min_amount_swap, keep_value_from, keep_value_to = value_woofi(privatekey, is_last=is_last)
+    if from_chain == None:
+        return
 
     if from_chain == to_chain:
         woofi_swap(privatekey, from_chain, from_token, to_token, swap_all_balance, amount_from, amount_to, min_amount_swap, keep_value_from, keep_value_to)
@@ -702,7 +705,7 @@ def transfer(privatekey, retry=0):
             token_contract, decimals, symbol = check_data_token(web3, token_address)
 
         if transfer_all_balance:
-            amount = (check_balance(privatekey, chain, token_address) - keep_value) * 1
+            amount = (check_balance(privatekey, chain, token_address) - keep_value) * 0.97
         else:
             amount = round(random.uniform(amount_from, amount_to), 8)
 
@@ -761,13 +764,11 @@ def transfer(privatekey, retry=0):
                     transfer(privatekey, retry + 1)
                 else:
                     logger.error(f'{module_str} | tx is failed | {tx_link}')
-            return True
 
         else:
             logger.error(
                 f"{module_str} : can't transfer : {amount} (amount) < {min_amount_transfer} (min_amount_transfer)")
             list_send.append(f'{STR_CANCEL}{module_str} : {amount} < {min_amount_transfer}')
-            return False
 
     except Exception as error:
 

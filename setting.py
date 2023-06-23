@@ -11,18 +11,18 @@ MODULE = 8
 
 IS_SLEEP = True  # True / False. True ���� ����� ��������� sleep ����� ����������
 # �� ������� �� ������� ���� ����� ���������� (�������) :
-SLEEP_FROM = 65
-SLEEP_TO = 80
+SLEEP_FROM = 100
+SLEEP_TO = 130
 
-TRANSFER = True     # ������ �������� � ����� True = ��, False = ���
+TRANSFER = False     # ������ �������� � ����� True = ��, False = ���
 TRANSFER_DELAY = 60     # �������� ����� ��������� ������� � ���������� � ��������
 
-DELAY_RETRY_FIND_BALANCE = 60  # �������� ����� ��������� ������� ������� � ��������
+DELAY_RETRY_FIND_BALANCE = 300  # �������� ����� ��������� ������� ������� � ��������
 
 # ����� �� ��������������� (������������) ��������. True = ��. False = ���
-RANDOM_WALLETS = False
+RANDOM_WALLETS = True
 
-RETRY = 100   # ���-�� ������� ��� ������� / ������
+RETRY = 0   # ���-�� ������� ��� ������� / ������
 
 def convert_to_dollars(value, symbol):
     api_key = '7ca03b40-8627-4aa0-8325-83fccc97e8c5'
@@ -57,24 +57,16 @@ def convert_to_dollars(value, symbol):
         response = requests.get(api_url, params=params, headers=headers).json()
         price = response['data']['AVAX']['quote']['USD']['price']
 
-    elif (symbol == 'optimism'):
-        params = {
-            'symbol': 'ETH',
-            'convert': 'USD'
-        }
-        response = requests.get(api_url, params=params, headers=headers).json()
-        price = response['data']['ETH']['quote']['USD']['price']
-
 
     return price
 
 def value_woofi(privatekey, is_last=False):
     from utils import check_balance
 
-    from_chains = {'arbitrum': ['0xff970a61a04b1ca14834a43f5de4533ebddb5cc8']}
+    from_chains = {'polygon': ['0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', '0xc2132d05d31c914a87c6611c10748aeb04b58e8f']}
 
     # �������� to ����: [�������� ������, �������� ������, ...]
-    to_chains = {'optimism': ['0x7f5c764cbc14f9669b88837ca1490cca17c31607']}
+    to_chains = {'avalanche': ['0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E']}
 
     chain_with_balance = ''
     balance = 0
@@ -101,6 +93,7 @@ def value_woofi(privatekey, is_last=False):
                     contract_with_balance = contract
 
         if chain_with_balance == '':
+            return None, None, None, None, None, None, None, None, None, None
             for _ in tqdm(range(DELAY_RETRY_FIND_BALANCE), desc='sleep (find balance ',
                           bar_format='{desc}: {n_fmt}/{total_fmt}'):
                 time.sleep(1)
@@ -113,17 +106,17 @@ def value_woofi(privatekey, is_last=False):
         while to_chain == from_chain:
             to_chain = chains_list[random.randint(0, len(chains_list) - 1)]
     else:
-        while to_chain == from_chain or to_chain not in ['polygon', 'optimism']:
+        while to_chain == from_chain or to_chain not in ['polygon', 'avalanche']:
             to_chain = chains_list[random.randint(0, len(chains_list) - 1)]
 
     from_token = contract_with_balance
     to_token = to_chains[to_chain][random.randint(0, len(to_chains[to_chain])-1)]
 
-    amount_from = 0.001                 # �� ������ ���-�� from_token �������
-    amount_to = 0.0011                   # �� ������ ���-�� from_token �������
+    amount_from = 20                 # �� ������ ���-�� from_token �������
+    amount_to = 30                   # �� ������ ���-�� from_token �������
 
     swap_all_balance = True        # True / False. ���� True, ����� ������� ���� ������
-    min_amount_swap = 0             # ���� ������ ����� ������ ����� �����, ������� �� �����
+    min_amount_swap = 10             # ���� ������ ����� ������ ����� �����, ������� �� �����
     keep_value_from = 0         # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
     keep_value_to = 0           # �� ������� ����� ��������� �� �������� (�������� ������ ��� : swap_all_balance = True)
 
@@ -134,7 +127,9 @@ def value_woofi(privatekey, is_last=False):
 def value_transfer(privatekey):
     from utils import check_balance
 
-    chains = {'optimism': '0x7f5c764cbc14f9669b88837ca1490cca17c31607'}
+    chains = {'polygon': '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+              'fantom': '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75',
+              'avalanche': '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E'}
     chain_with_balance = ''
     balance = 0
     while chain_with_balance == '':
@@ -155,8 +150,8 @@ def value_transfer(privatekey):
     amount_from = 1  # �� ������ ���-�� ����� ������ ��������
     amount_to = 2  # �� ������ ���-�� ����� ������ ��������
 
-    transfer_all_balance = True  # True / False. ���� True, ����� ������� ���� ������
-    min_amount_transfer = 0.0008  # ���� ������ ����� ������ ����� �����, �������� �� �����
+    transfer_all_balance = False  # True / False. ���� True, ����� ������� ���� ������
+    min_amount_transfer = 0  # ���� ������ ����� ������ ����� �����, �������� �� �����
     keep_value_from = 0  # �� ������� ����� ��������� �� �������� (�������� ������ ��� : transfer_all_balance = True)
     keep_value_to = 0  # �� ������� ����� ��������� �� �������� (�������� ������ ��� : transfer_all_balance = True)
 
@@ -202,8 +197,8 @@ def value_1inch_swap(first, last, private_key):
             'native_coin': 'matic', #нативная монета
             'native_contract': '', #контракт нативной монеты
             'gas_balance': 2, #минимальный остаток для газа
-            'min_swap': 0.01, #минимальный свап
-            'max_swap': 0.02, #максимальный свап
+            'min_swap': 0.2, #минимальный свап
+            'max_swap': 0.5, #максимальный свап
             'coins': { 
                 'link': '0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39',
                 'sand': '0xbbba073c31bf03b8acf7c28ef0738decf3695683',

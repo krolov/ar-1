@@ -6,10 +6,6 @@ from logging.handlers import RotatingFileHandler
 
 import random
 
-def start_transfer_tries(privatekey):
-    while transfer(privatekey) == False:
-        sleeping(40,60)
-
 
 if __name__ == "__main__":
     logger.add(RotatingFileHandler(filename='logs.txt'))
@@ -30,14 +26,14 @@ if __name__ == "__main__":
             woofi(key)
             logger.info("bridge done")
 
-            if is_first:
-                with open('results/finished_wallets.txt', 'a', encoding='utf-8') as f:
-                    f.write(f'{key}\n')
+            #if is_first:
+                #with open('results/finished_wallets.txt', 'a', encoding='utf-8') as f:
+                    #f.write(f'{key}\n')
 
-            flip = random.randrange(1)#рандом 50%
+            flip = random.randrange(3)#рандом 50%
             logger.info(f'flip: {flip}')
             if flip:
-                delay = random.randint(60, 120) # время делея
+                delay = random.randint(600, 1200) # время делея
                 Timer(delay, inch_swap, kwargs={'privatekey': key, 'retry': 0}).start() # свап
                 
             if IS_SLEEP:
@@ -63,16 +59,19 @@ if __name__ == "__main__":
         if TRANSFER:
             woofi(key, is_last=True)
             
-            Timer(10, start_transfer_tries, kwargs={'privatekey': key}).start()
+            transfer_delay = random.randint(120, 180) # время делея
+            Timer(transfer_delay+delay, transfer, kwargs={'privatekey': key}).start()
         else:
             woofi(key)
 
         delay = random.randint(120, 180) # время делея
         Timer(delay, inch_swap, kwargs={'privatekey': key, 'retry': 0, 'last': True}).start() # свап
 
-        if is_first:
-            with open('results/finished_wallets.txt', 'a', encoding='utf-8') as f:
-                f.write(f'{key}\n')
+        #if is_first:
+            #with open('results/finished_wallets.txt', 'a', encoding='utf-8') as f:
+                #f.write(f'{key}\n')
 
         if IS_SLEEP:
             sleeping(SLEEP_FROM, SLEEP_TO)
+
+

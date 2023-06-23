@@ -1,4 +1,4 @@
-Yepimport requests, json, time, ccxt
+import requests, json, time, ccxt
 from ccxt import ExchangeError
 from loguru import logger
 from web3 import Web3, AsyncHTTPProvider
@@ -19,7 +19,7 @@ from data.rpc import DATA
 from setting import *
 from data.abi.abi import *
 
-max_time_check_tx_status = 60
+max_time_check_tx_status = 300
 
 outfile = ''
 with open(f"{outfile}data/abi/erc20.json", "r") as file:
@@ -132,25 +132,23 @@ LAYERZERO_CHAINS_ID = {
     'aptos'     : 108
 }
 
-# контракты бриджа
+# РєРѕРЅС‚СЂР°РєС‚С‹ Р±СЂРёРґР¶Р°
 WOOFI_BRIDGE_CONTRACTS = {
     'avalanche'     : '0x45A01E4e04F14f7A4a6702c74187c5F6222033cd',
     'polygon'       : '0x45A01E4e04F14f7A4a6702c74187c5F6222033cd',
     'ethereum'      : '',
     'bsc'           : '0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8',
     'arbitrum'      : '0x53Bf833A5d6c4ddA888F69c22C88C9f356a41614',
-    'arbitrumETH': '0xbf22f0f184bCcbeA268dF387a49fF5238dD23E40',
     'optimism'      : '0xB0D502E938ed5f4df2E681fE6E419ff29631d62b',
 }
 
-# контракты свапа
+# РєРѕРЅС‚СЂР°РєС‚С‹ СЃРІР°РїР°
 WOOFI_SWAP_CONTRACTS = {
     'avalanche'     : '0x45A01E4e04F14f7A4a6702c74187c5F6222033cd',
     'polygon'       : '0x45A01E4e04F14f7A4a6702c74187c5F6222033cd',
     'ethereum'      : '',
     'bsc'           : '0x4a364f8c717cAAD9A442737Eb7b8A55cc6cf18D8',
     'arbitrum'      : '0x53Bf833A5d6c4ddA888F69c22C88C9f356a41614',
-    'arbitrumETH': '0xbf22f0f184bCcbeA268dF387a49fF5238dD23E40',
     'optimism'      : '0xB0D502E938ed5f4df2E681fE6E419ff29631d62b',
 }
 
